@@ -14,4 +14,18 @@ const upload = multer({ storage: storage });
 
 app.use(bodyParser.json());
 app.use(upload.single('image'));
-app.use('/image')
+app.use('/image', imagesRouter);
+
+const start = async () => {
+  try {
+    await sequelize.authenticate();
+    await sequelize.sync();
+    app.listen(PORT, () => {
+      console.log(`✅ Сервер запущен на порту - ${PORT}`);
+    })
+  } catch (error) {
+    console.log(`⛔ Ошибка с подключение к БД - ${error}`);
+  }
+};
+
+start();
