@@ -7,7 +7,8 @@ const Image = sequelize.define('image', {
   },
   nameFile: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
+    unique: true
   },
   data: {
     type: DataTypes.BLOB('long'),

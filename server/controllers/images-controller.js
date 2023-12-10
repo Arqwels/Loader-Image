@@ -1,28 +1,34 @@
+const e = require('express');
 const imageModel = require('../models/image-model');
+const imageService = require('../service/image-service');
+const ErrorHandler = require('../utils/error-handler');
 
 class imagesController {
   async loadImage(req, res) {
     try {
       const { originalname, buffer } = req.file;
-      const { description } = req.body;
-
-      const allowedExtensions = ['.png', '.jpg', '.jpeg', '.gif'];
-      const fileExtension = originalname.substring(originalname.lastIndexOf('.')).toLowerCase();
-
-      if (!allowedExtensions.includes(fileExtension)) {
-        return res.status(400).json({status: 400, success: false, error: "Ошибка в расширении файла!", hint: "Разрешённые расширение: png, jpg, jpeg и gif"});
-      };
-
-      await imageModel.create({ descriptionFile: description, nameFile: originalname, data: buffer});
-      res.status(201).json({status: 201, success: true, text: "Файл был успешно сохранён!"});
+      const { description, name } = req.body;
+      // Проверка на Расширение файла
+      await imageService.checkExtension(originalname);
+      // Проверка на запрещающие символы в name
+      await imageService.checkName(name);
+      // Проверка на уже имеющиеся фото по name
+      await imageService.existenceImage(name);
+      await imageModel.create({ descriptionFile: description, nameFile: name, data: buffer });
+      res.status(201).json({ status: 201, success: true, text: "Файл был успешно сохранён!" });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({status: 500, success: false, errors: error})
+      ErrorHandler(res, error);
     }
   };
 
   async sendImage(req, res) {
-
+    try {
+      const name = req.params.nameFile;
+      const metaData = await imageService.searchImage(name);
+      res.status(200).json({ status: 200, success: true, data: metaData });
+    } catch (error) {
+      ErrorHandler(res, error);
+    }
   };
 };
 
